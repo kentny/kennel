@@ -1,0 +1,81 @@
+# goreleaser config for kennel — wire the v0.1 release by hand the first time
+# (docs: https://goreleaser.com/quick-start) and use `goreleaser release` for
+# all subsequent tags. The homebrew block stays commented until the
+# kentny/homebrew-tap repository exists; uncomment then to enable automatic
+# formula updates on each tag.
+version: 2
+
+project_name: kennel
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: kennel
+    main: ./cmd/kennel
+    binary: kennel
+    env:
+      - CGO_ENABLED=0
+    # Windows is out of scope per .claude/plans/kennel-portable.md Non-Goals.
+    goos: [darwin, linux]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w
+      - -X github.com/kentny/kennel/internal/version.Version={{.Version}}
+      - -X github.com/kentny/kennel/internal/version.Commit={{.Commit}}
+      - -X github.com/kentny/kennel/internal/version.Date={{.Date}}
+
+archives:
+  - id: kennel
+    formats: [tar.gz]
+    # Keep archive names predictable for the homebrew formula's url template.
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  use: git
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^chore:"
+      - "^test:"
+      - "Merge pull request"
+      - "Merge branch"
+
+release:
+  github:
+    owner: kentny
+    name: kennel
+  draft: false
+  prerelease: auto
+
+# Uncomment once kentny/homebrew-tap exists AND a HOMEBREW_TAP_GITHUB_TOKEN
+# is configured in the release environment. Until then, edit homebrew/kennel.rb
+# by hand for each release.
+#
+# brews:
+#   - name: kennel
+#     repository:
+#       owner: kentny
+#       name: homebrew-tap
+#     directory: Formula
+#     homepage: https://github.com/kentny/kennel
+#     description: Portable sandbox manager for AI coding agents
+#     license: MIT
+#     test: |
+#       system "#{bin}/kennel", "version"
+#     caveats: |
+#       kennel shells out to `docker sandbox`, which requires
+#       Docker Desktop 4.58 or newer (https://docker.com/products/docker-desktop).
