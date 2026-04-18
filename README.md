@@ -1,6 +1,10 @@
-# kennel
+<p align="center">
+  <img src="assets/logo.png" alt="kennel logo" width="180">
+</p>
 
-**Portable sandbox manager for AI coding agents.**
+<h1 align="center">kennel</h1>
+
+<p align="center"><strong>Portable sandbox manager for AI coding agents.</strong></p>
 
 `kennel` is a thin Go wrapper around Docker Desktop's
 [Sandboxes](https://docs.docker.com/desktop/features/sandboxes/) feature. It
@@ -416,6 +420,7 @@ kennel/
 │   ├── paths/                     # tilde + relative path resolution
 │   └── version/                   # build-time version vars
 ├── legacy-bash/                   # v0.1 bash prototype, kept for reference
+├── assets/                        # logo and other static assets
 ├── homebrew/kennel.rb             # Homebrew formula (pending tap publication)
 ├── .goreleaser.yaml               # release cross-compile config
 └── Makefile                       # local dev targets
