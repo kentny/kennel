@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="kennel logo" width="180">
+  <img src="assets/logo.png" alt="kennel logo" width="400">
 </p>
 
 <h1 align="center">kennel</h1>
