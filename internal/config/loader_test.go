@@ -131,6 +131,59 @@ agents:
 	}
 }
 
+func TestLoad_NetworkPolicyDefaultsToDeny(t *testing.T) {
+	t.Parallel()
+	dir := writeTempConfig(t, `version: 1
+project: { name: tb }
+`)
+	got, err := Load(LoadOptions{StartDir: dir})
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if got.NetworkPolicy != "deny" {
+		t.Errorf("NetworkPolicy = %q, want deny", got.NetworkPolicy)
+	}
+}
+
+func TestLoad_NetworkPolicyExplicit(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name, policy string
+	}{
+		{"deny", "deny"},
+		{"allow", "allow"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := writeTempConfig(t, `version: 1
+project: { name: tb }
+network:
+  default_policy: `+tc.policy+`
+`)
+			got, err := Load(LoadOptions{StartDir: dir})
+			if err != nil {
+				t.Fatalf("Load: %v", err)
+			}
+			if got.NetworkPolicy != tc.policy {
+				t.Errorf("NetworkPolicy = %q, want %q", got.NetworkPolicy, tc.policy)
+			}
+		})
+	}
+}
+
+func TestLoad_NetworkPolicyRejectsUnknown(t *testing.T) {
+	t.Parallel()
+	dir := writeTempConfig(t, `version: 1
+project: { name: tb }
+network:
+  default_policy: permissive
+`)
+	_, err := Load(LoadOptions{StartDir: dir})
+	if err == nil || !strings.Contains(err.Error(), "network.default_policy") {
+		t.Fatalf("expected default_policy validation error, got %v", err)
+	}
+}
+
 func TestLoad_InitScriptComposition(t *testing.T) {
 	t.Parallel()
 	dir := writeTempConfig(t, `version: 1

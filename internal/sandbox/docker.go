@@ -136,10 +136,32 @@ func Rm(ctx context.Context, r *config.Resolved) error {
 	return nil
 }
 
-// ApplyNetwork pushes the deny-by-default allow-list policy into the named
-// sandbox. Called both from `Run` (after create) and from `kennel network
-// apply` (on demand after editing .kennel.yaml).
+// ApplyNetwork pushes the configured network policy into the named sandbox.
+// Called both from `Run` (after create) and from `kennel network apply` (on
+// demand after editing .kennel.yaml).
+//
+// Branches on r.NetworkPolicy:
+//   - "allow" → `docker sandbox network proxy --policy allow`, no allow-list
+//     flags (the sandbox has full outbound). Any allow_hosts / allow_cidrs
+//     configured in .kennel.yaml are ignored at runtime; they're preserved on
+//     disk so flipping back to "deny" is a one-line edit.
+//   - "deny"  → deny-by-default with the merged allow-list. Empty list means
+//     full isolation, which we warn about since it's almost certainly a
+//     misconfiguration.
 func ApplyNetwork(ctx context.Context, r *config.Resolved, sandboxName string) error {
+	policy := r.NetworkPolicy
+	if policy == "" {
+		policy = "deny"
+	}
+
+	if policy == "allow" {
+		tui.Info("applying network policy to %s (allow — full outbound)", sandboxName)
+		if len(r.AllowHosts) > 0 || len(r.AllowCidrs) > 0 {
+			tui.Warn("network.default_policy is 'allow' — allow_hosts / allow_cidrs are ignored at runtime")
+		}
+		return runDocker(ctx, "sandbox", "network", "proxy", sandboxName, "--policy", "allow")
+	}
+
 	tui.Info("applying network policy to %s (deny by default)", sandboxName)
 	if len(r.AllowHosts) == 0 && len(r.AllowCidrs) == 0 {
 		tui.Warn("no allow_hosts or allow_cidrs configured — sandbox will be fully isolated")

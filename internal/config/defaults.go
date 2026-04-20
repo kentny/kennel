@@ -29,4 +29,7 @@ const (
 	defaultSandboxPrefix   = "{agent}-{project}"
 	defaultWorktreeParent  = "../{project}-wt"
 	defaultAgent           = "claude"
+	// defaultNetworkPolicy is applied when network.default_policy is empty.
+	// Deny is the secure default and matches README / init template copy.
+	defaultNetworkPolicy = "deny"
 )

@@ -82,6 +82,12 @@ func validateConfig(c *Config, agent string) error {
 		}
 	}
 
+	switch c.Network.DefaultPolicy {
+	case "", "deny", "allow":
+	default:
+		return fmt.Errorf("network.default_policy %q is invalid (expected \"deny\" or \"allow\")", c.Network.DefaultPolicy)
+	}
+
 	for i, h := range c.Network.AllowHosts {
 		if !hostPatternRe.MatchString(h) {
 			return fmt.Errorf("network.allow_hosts[%d] %q is not a valid host pattern", i, h)

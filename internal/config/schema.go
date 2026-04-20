@@ -41,8 +41,13 @@ type SandboxNaming struct {
 
 // Network is the shared allow-list applied to every agent. Per-agent
 // entries in Agent.AllowHosts / Agent.AllowCidrs are merged on top.
-// DefaultPolicy is informational in v0.1 — docker sandbox always runs with
-// --policy deny and kennel honors this field for config-template generation.
+// DefaultPolicy selects the runtime docker-sandbox network mode:
+//   - "deny"  → deny-by-default; only AllowHosts/AllowCidrs (plus per-agent
+//     overrides) are reachable.
+//   - "allow" → full outbound; AllowHosts/AllowCidrs are ignored at runtime
+//     (still validated so they remain meaningful if the user flips back).
+//
+// Empty defaults to "deny".
 type Network struct {
 	DefaultPolicy string   `yaml:"default_policy"` // "deny" (default) | "allow"
 	AllowHosts    []string `yaml:"allow_hosts"`
@@ -94,9 +99,10 @@ type Resolved struct {
 	InstallPlugins bool
 	PluginRepos    []PluginRepo
 
-	AllowHosts  []string // network.allow_hosts ∪ agents.<agent>.allow_hosts, order-preserving dedup
-	AllowCidrs  []string // network.allow_cidrs ∪ agents.<agent>.allow_cidrs
-	AptPackages []string
+	NetworkPolicy string   // "deny" | "allow" — resolved from config with "deny" default
+	AllowHosts    []string // network.allow_hosts ∪ agents.<agent>.allow_hosts, order-preserving dedup
+	AllowCidrs    []string // network.allow_cidrs ∪ agents.<agent>.allow_cidrs
+	AptPackages   []string
 
 	InitScript      string // composed: `export K=V` lines from .env + raw init_script block
 	DockerfileExtra string // absolute path, or "" when unset

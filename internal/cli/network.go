@@ -15,8 +15,9 @@ var networkApplyEnv string
 
 var networkApplyCmd = &cobra.Command{
 	Use:   "apply",
-	Short: "Reapply the deny-by-default allow-list policy",
-	Long: `Reapply the deny-by-default allow-list to a running sandbox.
+	Short: "Reapply the configured network policy to the sandbox",
+	Long: `Reapply the network policy (deny-by-default allow-list, or full
+outbound when default_policy is 'allow') to a running sandbox.
 
 Use after editing .kennel.yaml's network section or agents.<name>.allow_hosts
 to push the change without destroying and recreating the sandbox.`,

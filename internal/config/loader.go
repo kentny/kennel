@@ -123,6 +123,13 @@ func Load(opts LoadOptions) (*Resolved, error) {
 	hosts := mergeDedup(raw.Network.AllowHosts, raw.Agents[agent].AllowHosts)
 	cidrs := mergeDedup(raw.Network.AllowCidrs, raw.Agents[agent].AllowCidrs)
 
+	// Network policy: explicit > default. validateConfig has already asserted
+	// the value is "", "deny", or "allow" so this switch is exhaustive.
+	policy := raw.Network.DefaultPolicy
+	if policy == "" {
+		policy = defaultNetworkPolicy
+	}
+
 	// Init script: declared env vars as export KEY=VAL lines, then the raw
 	// init_script block. Keys are sorted so the output is deterministic for
 	// golden tests.
@@ -158,9 +165,10 @@ func Load(opts LoadOptions) (*Resolved, error) {
 		InstallPlugins: plugins.Enabled,
 		PluginRepos:    plugins.Repos,
 
-		AllowHosts:  hosts,
-		AllowCidrs:  cidrs,
-		AptPackages: raw.AptPackages,
+		NetworkPolicy: policy,
+		AllowHosts:    hosts,
+		AllowCidrs:    cidrs,
+		AptPackages:   raw.AptPackages,
 
 		InitScript:      initScript,
 		DockerfileExtra: extraAbs,
